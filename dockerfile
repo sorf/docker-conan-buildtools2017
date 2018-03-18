@@ -4,6 +4,12 @@
 # 
 # Build with (for 4GB memory):
 #   docker build -t conanbuildtools2017:ltsc2016 -m 4GB .
+#
+# Note:
+#   Changing the network used when building from the default to the external one, helped
+#   avoiding failures when downloading Java.
+#   docker build --network=External   -t conanbuildtools2017:ltsc2016 -m 4GB .
+
 
 FROM microsoft/windowsservercore:ltsc2016
 
