@@ -100,6 +100,25 @@ RUN Write-Host ('Installing cmake=={0} ...' -f $env:CMAKE_VERSION); \
     \
     Write-Host 'Complete.';
 
+ENV JAVA_VERSION 9.0.4-1
+ENV JAVA_ZIP_VERSION 9-openjdk-9.0.4-1.b11
+ENV JAVA_SHA256 1333ab5bccc20e9043f0593b001825cbfa141f0e0c850d877af6b8e2c990cb47
+ENV JAVA_HOME C:\\java-${JAVA_ZIP_VERSION}.ojdkbuild.windows.x86_64
+
+RUN Write-Host ('Installing java=={0} ...' -f $env:JAVA_VERSION); \
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+    Invoke-WebRequest -Uri https://github.com/ojdkbuild/ojdkbuild/releases/download/$env:JAVA_VERSION/java-$env:JAVA_ZIP_VERSION.ojdkbuild.windows.x86_64.zip -OutFile 'openjdk.zip'; \
+    if ((Get-FileHash -Path openjdk.zip -Algorithm SHA256).Hash -ne $env:JAVA_SHA256) { throw 'java: Download hash does not match' }; \
+    Expand-Archive openjdk.zip c: ; \
+    Remove-Item openjdk.zip -Force; \
+    [System.Environment]::SetEnvironmentVariable('PATH', "\"${env:PATH};$env:JAVA_HOME\bin\"", 'Machine'); \
+    $env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
+    \
+    java --version; \
+    \
+    Write-Host 'Complete.';
+
+
 RUN Write-Host ('Installing virtualenv ...'); \
     pip install -U virtualenv; \
     \
