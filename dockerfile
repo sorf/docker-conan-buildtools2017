@@ -94,6 +94,7 @@ RUN Write-Host ('Installing cmake=={0} ...' -f $env:CMAKE_VERSION); \
     Expand-Archive cmake.zip c: ; \
     Remove-Item cmake.zip -Force; \
     [System.Environment]::SetEnvironmentVariable('PATH', "\"${env:PATH};C:\cmake-$env:CMAKE_VERSION\bin\"", 'Machine'); \
+    $env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
     \
     cmake --version; \
     \
