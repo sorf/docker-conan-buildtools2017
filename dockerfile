@@ -16,9 +16,8 @@ FROM microsoft/windowsservercore:ltsc2016
 # Use PowerShell commands to download, validate hashes, etc.
 SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; $VerbosePreference = 'Continue';"]
 
-# Download Build Tools 15.4.27004.2005 and other useful tools.
-ENV VS_BUILDTOOLS_URI=https://aka.ms/vs/15/release/6e8971476/vs_buildtools.exe \
-    VS_BUILDTOOLS_SHA256=D482171C7F2872B6B9D29B116257C6102DBE6ABA481FAE4983659E7BF67C0F88 \
+# Download latest Build Tools and nuget .
+ENV VS_BUILDTOOLS_URI=https://aka.ms/vs/15/release/vs_buildtools.exe \
     NUGET_URI=https://dist.nuget.org/win-x86-commandline/v4.1.0/nuget.exe \
     NUGET_SHA256=4C1DE9B026E0C4AB087302FF75240885742C0FAA62BD2554F913BBE1F6CB63A0
 
@@ -32,7 +31,7 @@ RUN New-Item -Path C:\Bin, C:\TEMP -Type Directory | Out-Null; \
       } \
     }; \
     Fetch -Uri $env:NUGET_URI -Path C:\Bin\nuget.exe -Hash $env:NUGET_SHA256; \
-    Fetch -Uri $env:VS_BUILDTOOLS_URI -Path C:\TEMP\vs_buildtools.exe -Hash $env:VS_BUILDTOOLS_SHA256; \
+    Fetch -Uri $env:VS_BUILDTOOLS_URI -Path C:\TEMP\vs_buildtools.exe; \
     Fetch -Uri 'https://aka.ms/vscollect.exe' -Path C:\TEMP\collect.exe; \
     \
     Write-Host 'Installing vs_buildtools.exe...'; \
@@ -124,6 +123,21 @@ RUN Write-Host ('Installing java=={0} ...' -f $env:JAVA_VERSION); \
     \
     Write-Host 'Complete.';
 
+ENV GIT_VERSION=2.16.2
+ENV GIT_SHA256=F4AC4E7D53D599D515E905824240CC2B82F3E2C294A872BB650E44B7E89CAE8C
+
+RUN Write-Host ('Installing git=={0} ...' -f $env:GIT_VERSION); \
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+    Invoke-WebRequest -Uri https://github.com/git-for-windows/git/releases/download/v$env:GIT_VERSION.windows.1/MinGit-$env:GIT_VERSION-64-bit.zip -OutFile 'git.zip'; \
+    if ((Get-FileHash -Path git.zip -Algorithm SHA256).Hash -ne $env:GIT_SHA256) { throw 'git: Download hash does not match' }; \
+    Expand-Archive git.zip c:\mingit ; \
+    Remove-Item git.zip -Force; \
+    [System.Environment]::SetEnvironmentVariable('PATH', "\"${env:PATH};C:\mingit\cmd\"", 'Machine'); \
+    $env:PATH = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::Machine); \
+    \
+    git --version; \
+    \
+    Write-Host 'Complete.';
 
 RUN Write-Host ('Installing virtualenv ...'); \
     pip install -U virtualenv; \
